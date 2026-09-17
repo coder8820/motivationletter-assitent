@@ -32,32 +32,158 @@ st.set_page_config(
 # CUSTOM CSS — MODERN SAAS LOOK
 # ----------------------------------------------------------------------------
 
-CUSTOM_CSS = """
+THEMES = {
+    "dark": {
+        "BG_START": "#0b0f1a",
+        "BG_END": "#10162a",
+        "SURFACE": "#141b2e",
+        "SURFACE_MUTED": "#0e1424",
+        "BORDER": "#262f47",
+        "TEXT_MAIN": "#eef1fb",
+        "TEXT_MUTED": "#9aa4c4",
+        "BRAND_PRIMARY": "#1c2540",
+        "BRAND_ACCENT": "#7c9bff",
+        "BRAND_ACCENT_SOFT": "rgba(124, 155, 255, 0.16)",
+        "SUCCESS": "#34d399",
+        "WARNING": "#fbbf24",
+        "BADGE_STRONG_BG": "rgba(52, 211, 153, 0.16)",
+        "BADGE_MODERATE_BG": "rgba(251, 191, 36, 0.16)",
+        "BADGE_WEAK_BG": "rgba(248, 113, 113, 0.16)",
+        "BADGE_WEAK_TEXT": "#f87171",
+        "COLOR_SCHEME": "dark",
+        "SHADOW": "0 8px 24px -18px rgba(0, 0, 0, 0.6)",
+        "HERO_SHADOW": "0 20px 45px -20px rgba(0, 0, 0, 0.65)",
+    },
+    "light": {
+        "BG_START": "#f7f8fc",
+        "BG_END": "#f2f4fa",
+        "SURFACE": "#ffffff",
+        "SURFACE_MUTED": "#f7f8fc",
+        "BORDER": "#e6e8f0",
+        "TEXT_MAIN": "#1c2130",
+        "TEXT_MUTED": "#656d80",
+        "BRAND_PRIMARY": "#2b3a67",
+        "BRAND_ACCENT": "#5b7fff",
+        "BRAND_ACCENT_SOFT": "#eef1ff",
+        "SUCCESS": "#1c8a5a",
+        "WARNING": "#b8860b",
+        "BADGE_STRONG_BG": "#e7f7ee",
+        "BADGE_MODERATE_BG": "#fff6e0",
+        "BADGE_WEAK_BG": "#fdeaea",
+        "BADGE_WEAK_TEXT": "#c0392b",
+        "COLOR_SCHEME": "light",
+        "SHADOW": "0 8px 24px -18px rgba(28, 33, 48, 0.25)",
+        "HERO_SHADOW": "0 20px 45px -20px rgba(43, 58, 103, 0.55)",
+    },
+}
+
+CUSTOM_CSS_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+
+html { color-scheme: __COLOR_SCHEME__; }
 
 html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 :root {
-    --brand-primary: #2b3a67;
-    --brand-accent: #5b7fff;
-    --brand-accent-soft: #eef1ff;
-    --surface: #ffffff;
-    --surface-muted: #f7f8fc;
-    --border-soft: #e6e8f0;
-    --text-main: #1c2130;
-    --text-muted: #656d80;
-    --success: #1c8a5a;
-    --warning: #b8860b;
+    --brand-primary: __BRAND_PRIMARY__;
+    --brand-accent: __BRAND_ACCENT__;
+    --brand-accent-soft: __BRAND_ACCENT_SOFT__;
+    --surface: __SURFACE__;
+    --surface-muted: __SURFACE_MUTED__;
+    --border-soft: __BORDER__;
+    --text-main: __TEXT_MAIN__;
+    --text-muted: __TEXT_MUTED__;
+    --success: __SUCCESS__;
+    --warning: __WARNING__;
+    --card-shadow: __SHADOW__;
+    --hero-shadow: __HERO_SHADOW__;
+    --badge-strong-bg: __BADGE_STRONG_BG__;
+    --badge-moderate-bg: __BADGE_MODERATE_BG__;
+    --badge-weak-bg: __BADGE_WEAK_BG__;
+    --badge-weak-text: __BADGE_WEAK_TEXT__;
 }
 
 .stApp {
-    background: linear-gradient(180deg, #f7f8fc 0%, #f2f4fa 100%);
+    background: linear-gradient(180deg, __BG_START__ 0%, __BG_END__ 100%);
+}
+
+.stApp, .stApp p, .stApp span, .stApp label, .stApp li, .stMarkdown, .stCaption {
+    color: var(--text-main);
 }
 
 #MainMenu, footer, header {visibility: hidden;}
+
+/* ---------- Sidebar ---------- */
+[data-testid="stSidebar"] {
+    background: var(--surface-muted);
+    border-right: 1px solid var(--border-soft);
+}
+[data-testid="stSidebar"] * {
+    color: var(--text-main) !important;
+}
+
+/* ---------- Native input widgets ---------- */
+.stTextInput input,
+.stTextArea textarea,
+.stNumberInput input {
+    background-color: var(--surface) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-soft) !important;
+    border-radius: 10px !important;
+}
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.85;
+}
+[data-baseweb="select"] > div {
+    background-color: var(--surface) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-soft) !important;
+    border-radius: 10px !important;
+}
+[data-baseweb="popover"] [role="listbox"] {
+    background-color: var(--surface) !important;
+}
+[data-baseweb="menu"] li, [role="option"] {
+    background-color: var(--surface) !important;
+    color: var(--text-main) !important;
+}
+.stTextInput label, .stTextArea label, .stSelectbox label,
+.stCheckbox label, .stRadio label, .stNumberInput label {
+    color: var(--text-main) !important;
+}
+
+/* ---------- Expander ---------- */
+[data-testid="stExpander"] {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+}
+[data-testid="stExpander"] summary {
+    color: var(--text-main) !important;
+}
+
+/* ---------- Alerts (info / warning / error / success) ---------- */
+[data-testid="stAlert"], .stAlert {
+    background-color: var(--surface) !important;
+    color: var(--text-main) !important;
+    border-radius: 10px;
+}
+[data-testid="stAlert"] p, .stAlert p {
+    color: var(--text-main) !important;
+}
+
+/* ---------- Progress bar ---------- */
+.stProgress > div > div > div {
+    background-color: var(--brand-accent) !important;
+}
+
+/* ---------- Toggle ---------- */
+[data-testid="stWidgetLabel"] p { color: var(--text-main) !important; }
 
 .block-container {
     padding-top: 1.5rem;
@@ -66,13 +192,14 @@ html, body, [class*="css"] {
 
 /* ---------- Hero ---------- */
 .hero-card {
-    background: linear-gradient(135deg, #2b3a67 0%, #46538f 55%, #5b7fff 100%);
+    background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
     border-radius: 20px;
     padding: 3rem 3rem;
     color: #ffffff;
-    box-shadow: 0 20px 45px -20px rgba(43, 58, 103, 0.55);
+    box-shadow: var(--hero-shadow);
     margin-bottom: 1.5rem;
 }
+.hero-card, .hero-card * { color: #ffffff !important; }
 .hero-eyebrow {
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -100,7 +227,7 @@ html, body, [class*="css"] {
     border: 1px solid var(--border-soft);
     border-radius: 16px;
     padding: 1.6rem 1.8rem;
-    box-shadow: 0 8px 24px -18px rgba(28, 33, 48, 0.25);
+    box-shadow: var(--card-shadow);
     margin-bottom: 1.1rem;
 }
 .mv-step-num {
@@ -138,9 +265,9 @@ html, body, [class*="css"] {
     margin-right: 0.4rem;
     margin-bottom: 0.4rem;
 }
-.badge-strong { background: #e7f7ee; color: var(--success); }
-.badge-moderate { background: #fff6e0; color: var(--warning); }
-.badge-weak { background: #fdeaea; color: #c0392b; }
+.badge-strong { background: var(--badge-strong-bg); color: var(--success); }
+.badge-moderate { background: var(--badge-moderate-bg); color: var(--warning); }
+.badge-weak { background: var(--badge-weak-bg); color: var(--badge-weak-text); }
 .badge-neutral { background: var(--brand-accent-soft); color: var(--brand-accent); }
 
 /* ---------- Letter container ---------- */
@@ -152,9 +279,9 @@ html, body, [class*="css"] {
     font-family: 'Source Serif 4', Georgia, serif;
     font-size: 1.04rem;
     line-height: 1.75;
-    color: #232838;
+    color: var(--text-main);
     white-space: pre-wrap;
-    box-shadow: 0 8px 24px -18px rgba(28, 33, 48, 0.25);
+    box-shadow: var(--card-shadow);
 }
 
 /* ---------- Progress pills ---------- */
@@ -180,15 +307,26 @@ html, body, [class*="css"] {
 }
 
 /* Buttons */
-.stButton>button {
+.stButton>button, .stDownloadButton>button {
     border-radius: 10px;
     font-weight: 600;
     padding: 0.55rem 1.3rem;
     border: 1px solid var(--border-soft);
+    background: var(--surface);
+    color: var(--text-main);
 }
 .stButton>button[kind="primary"] {
     background: var(--brand-accent);
     border-color: var(--brand-accent);
+    color: #ffffff !important;
+}
+.stButton>button:hover, .stDownloadButton>button:hover {
+    border-color: var(--brand-accent);
+    color: var(--brand-accent);
+}
+.stButton>button[kind="primary"]:hover {
+    color: #ffffff !important;
+    opacity: 0.92;
 }
 
 hr { border-color: var(--border-soft); }
@@ -239,8 +377,16 @@ hr { border-color: var(--border-soft); }
 """
 
 
-def render_global_css():
-    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+def build_theme_css(theme_name):
+    values = THEMES.get(theme_name, THEMES["dark"])
+    css = CUSTOM_CSS_TEMPLATE
+    for key, value in values.items():
+        css = css.replace(f"__{key}__", value)
+    return css
+
+
+def render_global_css(theme_name):
+    st.markdown(build_theme_css(theme_name), unsafe_allow_html=True)
 
 
 # ----------------------------------------------------------------------------
@@ -471,6 +617,7 @@ def retrieve_relevant_guidance(query, top_k=5):
 def initialize_session():
     defaults = {
         "page": "landing",
+        "theme": "dark",
         "profile": {},
         "current_letter": "",
         "revision_history": [],
@@ -904,6 +1051,13 @@ def render_sidebar():
     with st.sidebar:
         st.markdown("### 🎓 MotiveAI")
         st.caption("AI-powered academic motivation letter assistant")
+
+        is_dark = st.session_state.theme == "dark"
+        toggled_on = st.toggle("🌙 Dark Mode", value=is_dark, key="dark_mode_toggle")
+        if toggled_on != is_dark:
+            st.session_state.theme = "dark" if toggled_on else "light"
+            st.rerun()
+
         st.markdown("---")
 
         st.markdown("**Application**")
@@ -1390,8 +1544,8 @@ def render_result():
 # ----------------------------------------------------------------------------
 
 def main():
-    render_global_css()
     initialize_session()
+    render_global_css(st.session_state.theme)
     render_sidebar()
 
     page = st.session_state.page
