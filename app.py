@@ -6,6 +6,7 @@ import time
 
 import numpy as np
 import streamlit as st
+import streamlit.components.v1 as components
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -191,6 +192,49 @@ html, body, [class*="css"] {
 }
 
 hr { border-color: var(--border-soft); }
+
+/* ---------- Letter toolbar ---------- */
+.letter-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.letter-toolbar .lt-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+.letter-meta {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+/* ---------- Tabs ---------- */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.3rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+.stTabs [data-baseweb="tab"] {
+    height: 42px;
+    border-radius: 10px 10px 0 0;
+    padding: 0 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.stTabs [aria-selected="true"] {
+    color: var(--brand-accent) !important;
+    background: var(--brand-accent-soft);
+}
+
+/* ---------- Secondary hero button row ---------- */
+.hero-btn-row { display: flex; gap: 0.8rem; }
+
+/* ---------- Template placeholders ---------- */
+.letter-box .tpl-placeholder { color: var(--brand-accent); font-weight: 600; }
 </style>
 """
 
@@ -750,6 +794,83 @@ def run_full_generation(client, profile):
 
 
 # ----------------------------------------------------------------------------
+# QUICK MOTIVATION LETTER TEMPLATE (static, instant, no API call needed)
+# ----------------------------------------------------------------------------
+
+def build_letter_template():
+    return """Dear Admissions Committee,
+
+My name is [Your Full Name], and I am writing to apply for the [Target Program / Subject] at \
+[Target University]. I am currently completing my [Current Degree] in [Field of Study] at \
+[Current University / Institution], and I am eager to continue my academic path at the graduate level.
+
+Throughout my studies, I have developed a strong interest in [Your Scientific / Research Interest]. \
+This interest first took shape through [course, project, or experience that sparked it], and it has \
+grown as I explored [a specific problem, question, or area you find compelling]. I am particularly \
+drawn to [specific sub-topic or challenge within your field] because [your genuine reason].
+
+During my academic journey, I have had the opportunity to work on [Project / Research / Achievement 1], \
+where I [briefly describe what you did and what you learned]. I also [Project / Achievement 2, \
+certification, internship, or competition], which strengthened my [relevant skill]. These experiences \
+have given me a solid foundation in [key skills relevant to the target program].
+
+I chose [Target Program / Subject] because it is a natural continuation of my academic background in \
+[Field of Study] and my interest in [Scientific Interest]. [Target University / Program] offers \
+[specific aspect of the program, if known] that aligns closely with my goals, and I am confident this \
+program will help me deepen my expertise in [specific area].
+
+[Country/Region] stood out to me as the right place to pursue this degree because [your genuine \
+academic, research, or personal reason]. [Optional: add a specific detail about the university, \
+program, or research group only if you actually know it — never invent this.]
+
+In the short term, I hope to [short-term goal — a specific skill, research direction, or project you \
+want to pursue during the program]. In the long term, I aim to [long-term career or research goal], \
+building on the foundation this program will provide.
+
+I am confident that my background, motivation, and clear sense of direction make me a strong fit for \
+[Target Program / Subject] at [Target University]. I would welcome the opportunity to contribute to \
+and learn from your academic community, and I look forward to the possibility of furthering my studies \
+with you.
+
+Sincerely,
+[Your Full Name]"""
+
+
+def render_template_html(template_text):
+    html_text = template_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    html_text = re.sub(r"(\[[^\]]+\])", r'<span class="tpl-placeholder">\1</span>', html_text)
+    return html_text.replace("\n", "<br/>")
+
+
+# ----------------------------------------------------------------------------
+# CLIPBOARD COPY HELPER
+# ----------------------------------------------------------------------------
+
+def render_copy_button(text, key, label="📋 Copy to Clipboard"):
+    safe_text = json.dumps(text or "")
+    html = f"""
+    <div style="margin-bottom:0.4rem;">
+      <button id="copy-btn-{key}" style="
+          width:100%; padding:0.55rem 1rem; border-radius:10px; font-weight:600;
+          border:1px solid #e6e8f0; background:#ffffff; color:#1c2130; cursor:pointer;
+          font-family:Inter,-apple-system,sans-serif; font-size:0.95rem;">
+        {label}
+      </button>
+      <script>
+        const btn_{key} = document.getElementById("copy-btn-{key}");
+        btn_{key}.addEventListener("click", function() {{
+          navigator.clipboard.writeText({safe_text}).then(function() {{
+            btn_{key}.innerText = "✅ Copied!";
+            setTimeout(function() {{ btn_{key}.innerText = "{label}"; }}, 1800);
+          }});
+        }});
+      </script>
+    </div>
+    """
+    components.html(html, height=56)
+
+
+# ----------------------------------------------------------------------------
 # UI RENDERING
 # ----------------------------------------------------------------------------
 
@@ -791,6 +912,9 @@ def render_sidebar():
 
         st.markdown("**AI Tools**")
         st.caption("Generate · Refine · Quality Review")
+        if st.button("📄 Quick Template", use_container_width=True):
+            st.session_state.page = "template"
+            st.rerun()
 
         st.markdown("**Session**")
         st.write(f"Current Version: **{st.session_state.revision_count}**")
@@ -835,11 +959,59 @@ def render_landing():
             )
 
     st.write("")
-    _, mid, _ = st.columns([1, 1, 1])
+    _, mid, _ = st.columns([1, 1.6, 1])
     with mid:
-        if st.button("✨ Start Building", type="primary", use_container_width=True):
+        b1, b2 = st.columns(2)
+        with b1:
+            if st.button("✨ Start Building", type="primary", use_container_width=True):
+                st.session_state.page = "form"
+                st.rerun()
+        with b2:
+            if st.button("📄 Use a Quick Template", use_container_width=True):
+                st.session_state.page = "template"
+                st.rerun()
+        st.caption(
+            "Not ready to fill the full profile yet? Grab a ready-to-edit motivation letter "
+            "template instantly — no AI call needed."
+        )
+
+
+def render_template_page():
+    st.markdown("## 📄 Quick Motivation Letter Template")
+    st.caption(
+        "A ready-to-edit structure you can fill in yourself — generated instantly, with no AI call. "
+        "Replace every highlighted placeholder with your own real information."
+    )
+
+    template_text = build_letter_template()
+
+    st.markdown('<div class="letter-toolbar">', unsafe_allow_html=True)
+    st.markdown('<div class="lt-title">Editable Template</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown(f'<div class="letter-box">{render_template_html(template_text)}</div>', unsafe_allow_html=True)
+    words, chars = word_char_count(template_text)
+    st.markdown(f'<div class="letter-meta">Words: {words} · Characters: {chars}</div>', unsafe_allow_html=True)
+
+    st.write("")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        render_copy_button(template_text, key="template")
+    with c2:
+        st.download_button(
+            "⬇️ Download .txt", data=template_text.encode("utf-8"),
+            file_name="motivation_letter_template.txt", mime="text/plain",
+            use_container_width=True,
+        )
+    with c3:
+        if st.button("✨ Build My Personalized Letter Instead", use_container_width=True):
             st.session_state.page = "form"
             st.rerun()
+
+    st.write("")
+    if st.button("← Back to Home"):
+        st.session_state.page = "landing"
+        st.rerun()
 
 
 def render_profile_form():
@@ -1112,8 +1284,14 @@ def render_rag_transparency():
 
 def render_result():
     render_progress(6)
-    st.markdown("## Your Motivation Letter")
-    st.caption(f"Current Version: {st.session_state.revision_count}")
+
+    st.markdown('<div class="letter-toolbar">', unsafe_allow_html=True)
+    st.markdown('<div class="lt-title">✅ Your Motivation Letter</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<span class="mv-badge badge-neutral">Version {st.session_state.revision_count}</span>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
     if st.session_state.get("auto_revised_note"):
         st.info(st.session_state.auto_revised_note)
@@ -1121,85 +1299,90 @@ def render_result():
     letter = st.session_state.current_letter
     words, chars = word_char_count(letter)
 
-    st.markdown(f'<div class="letter-box">{letter}</div>', unsafe_allow_html=True)
-    st.caption(f"Words: {words} · Characters: {chars}")
+    tab_letter, tab_quality, tab_rag = st.tabs(["📄 Letter", "📊 Quality Review", "🔍 RAG Insights"])
 
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.download_button("📋 Download .txt", data=letter.encode("utf-8"),
-                            file_name="motivation_letter.txt", mime="text/plain",
-                            use_container_width=True)
-    with col2:
-        if st.button("🧹 Start Over", use_container_width=True):
-            reset_session()
-            st.rerun()
-    with col3:
-        show_versions = st.checkbox("Show version history", value=False)
-    with col4:
-        pass
+    with tab_letter:
+        st.markdown(f'<div class="letter-box">{letter}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="letter-meta">Words: {words} · Characters: {chars}</div>', unsafe_allow_html=True)
 
-    if show_versions and len(st.session_state.revision_history) > 1:
-        with st.expander("Previous Version"):
-            st.markdown(f'<div class="letter-box">{st.session_state.revision_history[-2]}</div>', unsafe_allow_html=True)
+        st.write("")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            render_copy_button(letter, key="letter")
+        with c2:
+            st.download_button(
+                "⬇️ Download .txt", data=letter.encode("utf-8"),
+                file_name="motivation_letter.txt", mime="text/plain",
+                use_container_width=True,
+            )
+        with c3:
+            if st.button("🧹 Start Over", use_container_width=True):
+                reset_session()
+                st.rerun()
+
+        if len(st.session_state.revision_history) > 1:
+            with st.expander("📜 Show previous version"):
+                prev = st.session_state.revision_history[-2]
+                st.markdown(f'<div class="letter-box">{prev}</div>', unsafe_allow_html=True)
+
+    with tab_quality:
+        render_quality_review(st.session_state.quality)
+
+    with tab_rag:
+        render_rag_transparency()
 
     st.markdown("---")
 
-    left, right = st.columns([1.3, 1])
-    with left:
-        st.markdown('<div class="mv-card">', unsafe_allow_html=True)
-        st.markdown('<div class="mv-section-title">🔄 Refine Your Letter</div>', unsafe_allow_html=True)
-        st.caption("How would you like to improve your motivation letter?")
-        feedback = st.text_area(
-            "Feedback", height=120, label_visibility="collapsed",
-            placeholder="Example: Make the introduction stronger and give more emphasis to my "
-                        "cybersecurity research interests.",
-        )
-        st.caption("Other ideas: make it more academic, more concise, improve the Russia section, "
-                    "add more research focus, reduce repetition, make it more natural.")
-        rebuild = st.button("✨ Rebuild with My Feedback", type="primary", use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mv-card">', unsafe_allow_html=True)
+    st.markdown('<div class="mv-section-title">🔄 Refine Your Letter</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mv-section-desc">How would you like to improve your motivation letter?</div>', unsafe_allow_html=True)
+    feedback = st.text_area(
+        "Feedback", height=120, label_visibility="collapsed",
+        placeholder="Example: Make the introduction stronger and give more emphasis to my "
+                    "cybersecurity research interests.",
+    )
+    st.caption("Other ideas: make it more academic, more concise, improve the Russia section, "
+                "add more research focus, reduce repetition, make it more natural.")
+    rebuild = st.button("✨ Rebuild with My Feedback", type="primary", use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-        if rebuild:
-            if not feedback or not feedback.strip():
-                st.warning("Please share at least a short note on what you'd like to change.")
+    if rebuild:
+        if not feedback or not feedback.strip():
+            st.warning("Please share at least a short note on what you'd like to change.")
+        else:
+            api_key = get_api_key()
+            client = get_client(api_key)
+            if client is None:
+                st.error("We couldn't refine your letter right now. Please check your Groq API "
+                          "configuration and try again.")
             else:
-                api_key = get_api_key()
-                client = get_client(api_key)
-                if client is None:
-                    st.error("We couldn't refine your letter right now. Please check your Groq API "
-                              "configuration and try again.")
-                else:
-                    with st.spinner("Rebuilding your letter with your feedback..."):
+                with st.spinner("Rebuilding your letter with your feedback..."):
+                    try:
+                        query = build_retrieval_query(st.session_state.profile) + " " + feedback
+                        guidance_chunks = retrieve_relevant_guidance(query, top_k=6)
+                        st.session_state.retrieved_topics = sorted({c["topic"] for c in guidance_chunks})
+
+                        new_letter = refine_letter(
+                            client, st.session_state.profile, guidance_chunks,
+                            st.session_state.current_letter, feedback,
+                        )
+                        new_quality = None
                         try:
-                            query = build_retrieval_query(st.session_state.profile) + " " + feedback
-                            guidance_chunks = retrieve_relevant_guidance(query, top_k=6)
-                            st.session_state.retrieved_topics = sorted({c["topic"] for c in guidance_chunks})
-
-                            new_letter = refine_letter(
-                                client, st.session_state.profile, guidance_chunks,
-                                st.session_state.current_letter, feedback,
-                            )
+                            new_quality = quality_review(client, st.session_state.profile, new_letter)
+                        except Exception:
                             new_quality = None
-                            try:
-                                new_quality = quality_review(client, st.session_state.profile, new_letter)
-                            except Exception:
-                                new_quality = None
 
-                            st.session_state.revision_history.append(new_letter)
-                            st.session_state.current_letter = new_letter
-                            st.session_state.revision_count += 1
-                            st.session_state.quality = new_quality
-                            st.session_state.feedback = feedback
-                            st.session_state.auto_revised_note = ""
-                            st.rerun()
-                        except Exception as exc:
-                            st.error("We couldn't refine your letter right now. Please check your "
-                                      "Groq API configuration and try again.")
-                            st.session_state.last_error = str(exc)
-
-    with right:
-        render_quality_review(st.session_state.quality)
-        render_rag_transparency()
+                        st.session_state.revision_history.append(new_letter)
+                        st.session_state.current_letter = new_letter
+                        st.session_state.revision_count += 1
+                        st.session_state.quality = new_quality
+                        st.session_state.feedback = feedback
+                        st.session_state.auto_revised_note = ""
+                        st.rerun()
+                    except Exception as exc:
+                        st.error("We couldn't refine your letter right now. Please check your "
+                                  "Groq API configuration and try again.")
+                        st.session_state.last_error = str(exc)
 
 
 # ----------------------------------------------------------------------------
@@ -1214,6 +1397,8 @@ def main():
     page = st.session_state.page
     if page == "landing":
         render_landing()
+    elif page == "template":
+        render_template_page()
     elif page == "form":
         render_profile_form()
     elif page == "result":
